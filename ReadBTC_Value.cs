@@ -19,8 +19,6 @@ namespace BTC_Swingtrade_Simulator
 
     class ReadBTC_Value
     {
-        private int readInterval { set; get; }
-
         private Timer OneSecTimer = new Timer();
 
         public event EventHandler<BTCEventArgs> NewBTCValueAvailable;
@@ -28,10 +26,8 @@ namespace BTC_Swingtrade_Simulator
         private bool FirstCycle = true;
         private double PreviousBTCValue = 0.0f;
 
-        public ReadBTC_Value(int interval)
+        public ReadBTC_Value()
         {
-            readInterval = interval;
-
             OneSecTimer.Interval = 1000; //ms
             OneSecTimer.Tick += OneSecTimer_Tick;
         }
@@ -66,16 +62,17 @@ namespace BTC_Swingtrade_Simulator
 
             string BTCRateUSD = (BTCJson.bpi.USD.rate).ToString();
             BTCRateUSD = BTCRateUSD.Replace(",", string.Empty);
-            BTCRateUSD = BTCRateUSD.Replace('.', ',');
 
             BTCEventArgs _BTCEventArgs = new BTCEventArgs();
+            //Try both '.' and ',' for parsing, since decimal points may vary in different environments
             try
             {
                 _BTCEventArgs.BTCValue = double.Parse(BTCRateUSD);
             }
-            catch (Exception e)
+            catch(Exception)
             {
-
+                BTCRateUSD = BTCRateUSD.Replace('.', ',');
+                _BTCEventArgs.BTCValue = double.Parse(BTCRateUSD);
             }
 
             if (_BTCEventArgs.BTCValue != PreviousBTCValue)
@@ -87,7 +84,7 @@ namespace BTC_Swingtrade_Simulator
 
                 FirstCycle = false;
                 _BTCEventArgs.BTCValuePrev = PreviousBTCValue;
-                _BTCEventArgs.BTCPercentageChange = _BTCEventArgs.BTCValue / _BTCEventArgs.BTCValuePrev;
+                _BTCEventArgs.BTCPercentageChange = _BTCEventArgs.BTCValue / _BTCEventArgs.BTCValuePrev - 1;
                 PreviousBTCValue = double.Parse(BTCRateUSD);
                 NewBTC_Value_Availalble(_BTCEventArgs);
             }
