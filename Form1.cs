@@ -22,6 +22,8 @@ namespace BTC_Swingtrade_Simulator
         public readonly Color NEGATIVE_COURSE_COLOR = Color.FromArgb(255, 0, 0);
         public readonly Color POSITIVE_COURSE_COLOR = Color.FromArgb(43, 255, 0);
 
+        bool BTC_InitValue = true;
+
         MoneyTracker moneyTracker;
         ReadBTC_Value BTCReader;
         TradingBot tradingBot;
@@ -51,7 +53,6 @@ namespace BTC_Swingtrade_Simulator
             BTCReader.NewBTCValueAvailable += BTC_Tracker_NewBTCValueAvailable;
             tradingBot.TradeOccurred += TradingBot_TradeOccurred;
             infoLabelHandler.InfoLabelUpdate += InfoLabelHandler_InfoLabelUpdate;
-
 
             this.BackColor = DEFAULT_BACKCOLOR;
             MainPannel.BackColor = LIGHT_BACKCOLOR;
@@ -100,20 +101,27 @@ namespace BTC_Swingtrade_Simulator
 
             moneyTracker.BTC_Worth = e.BTCValue;
             tradingBot.UpdateChangeList(e.BTCPercentageChange, ref moneyTracker);
+
+            if(BTC_InitValue)
+            {
+                BTC_InitValue = false;
+                moneyTracker.BuyInUSD(0.5f * moneyTracker.USD_Balance);
+            }
+
+            lUSDBal.Text = "USD: " + moneyTracker.USD_Balance.ToString() + "$";
+            lBTCBal.Text = "BTC: " + moneyTracker.BTC_Balance.ToString();
         }
         private void TradingBot_TradeOccurred(object sender, TradingResultEventArgs e)
         {
             switch(e.TradeDirection)
             {
                 case TradingDirection.Buy:
-                    infoLabelHandler.setInfo(e.Amount + " USD were traded into BTC");
-                    lUSDBal.Text = "USD: " + moneyTracker.USD_Balance.ToString() + "$";
-                    lBTCBal.Text = "BTC: " + moneyTracker.BTC_Balance.ToString();
+                    if (e.Amount != 0) infoLabelHandler.setInfo(e.Amount + " USD were traded into BTC");
+                    else infoLabelHandler.setInfo("Insufficient Funds to Buy BTC");
                     break;
                 case TradingDirection.Sell:
-                    infoLabelHandler.setInfo(e.Amount + " BTC were traded into USD");
-                    lUSDBal.Text = "USD: " + moneyTracker.USD_Balance.ToString() + "$";
-                    lBTCBal.Text = "BTC: " + moneyTracker.BTC_Balance.ToString();
+                    if (e.Amount != 0) infoLabelHandler.setInfo(e.Amount + " BTC were traded into USD");
+                    else infoLabelHandler.setInfo("Insufficient Funds to Sell BTC");
                     break;
                 case TradingDirection.Cooldown:
                     infoLabelHandler.setInfo("Bot on cooldown for another " + e.Amount + " minutes");

@@ -50,8 +50,6 @@ namespace BTC_Swingtrade_Simulator
 
             TransactionCooldown = 0;
             TransactionCooldown_Duration = FullIntegralLength;
-
-            BalanceTracker.BuyInUSD(0.5f * BalanceTracker.USD_Balance);
         }
 
         private void InvokeTradeEvent(TradingDirection tradingDirection, double amount)
@@ -94,34 +92,60 @@ namespace BTC_Swingtrade_Simulator
                 else                        LongIntegral += ChangeList[i];
             }
         }
+        private bool CompareIntegralLists(TradingDirection tradingDirection)
+        {
+            switch(tradingDirection)
+            {
+                case TradingDirection.Buy:
+                    return ((LongIntegral / LongIntegralLength) < 0) && ((ShortIntegral / ShortIntegralLength) > 0);
+                case TradingDirection.Sell:
+                    return ((LongIntegral / LongIntegralLength) > 0) && ((ShortIntegral / ShortIntegralLength) < 0);
+                default:
+                    return false;
+            }
+        }
         private void Trade(ref MoneyTracker BalanceTracker)
         {
             //CalculateIntegralValues
             ProcessChangeList();
 
-            if /*(*/(((LongIntegral / LongIntegralLength) > 0) && ((ShortIntegral / ShortIntegralLength) < 0))/* && (BalanceTracker.BTC_Worth > LastSellBTCWorth))*/
+            if (CompareIntegralLists(TradingDirection.Sell) && (BalanceTracker.BTC_Worth > LastBuyBTCWorth))
             {
-                InvokeTradeEvent(TradingDirection.Sell, 0.5f * BalanceTracker.BTC_Balance);
+                if (BalanceTracker.BTC_Balance > 0)
+                {
+                    InvokeTradeEvent(TradingDirection.Sell, 0.5f * BalanceTracker.BTC_Balance);
 
-                //Sell half the balance
-                BalanceTracker.SellInBTC(0.5f * BalanceTracker.BTC_Balance);
+                    //Sell half the balance
+                    BalanceTracker.SellInBTC(0.5f * BalanceTracker.BTC_Balance);
 
-                LastSellBTCWorth = BalanceTracker.BTC_Worth;
+                    LastSellBTCWorth = BalanceTracker.BTC_Worth;
 
-                TransactionCooldown = 0;
-                TransactionCooldown_Duration = ShortIntegralLength;
+                    TransactionCooldown = 0;
+                    TransactionCooldown_Duration = ShortIntegralLength;
+                }
+                else
+                {
+                    InvokeTradeEvent(TradingDirection.Sell, 0.0f);
+                }
             }
-            else if /*(*/(((LongIntegral / LongIntegralLength) < 0) && ((ShortIntegral / ShortIntegralLength) > 0))/* && (BalanceTracker.BTC_Worth < LastBuyBTCWorth))*/
+            else if (CompareIntegralLists(TradingDirection.Buy) && (BalanceTracker.BTC_Worth < LastSellBTCWorth))
             {
-                InvokeTradeEvent(TradingDirection.Buy, 0.5f * BalanceTracker.USD_Balance);
+                if (BalanceTracker.USD_Balance > 0)
+                {
+                    InvokeTradeEvent(TradingDirection.Buy, 0.5f * BalanceTracker.USD_Balance);
 
-                //Buy half the balance
-                BalanceTracker.BuyInUSD(0.5f * BalanceTracker.USD_Balance);
+                    //Buy half the balance
+                    BalanceTracker.BuyInUSD(0.5f * BalanceTracker.USD_Balance);
 
-                LastBuyBTCWorth = BalanceTracker.BTC_Worth;
+                    LastBuyBTCWorth = BalanceTracker.BTC_Worth;
 
-                TransactionCooldown = 0;
-                TransactionCooldown_Duration = ShortIntegralLength;
+                    TransactionCooldown = 0;
+                    TransactionCooldown_Duration = ShortIntegralLength;
+                }
+                else
+                {
+                    InvokeTradeEvent(TradingDirection.Buy, 0.0f);
+                }
             }
         }
     }
