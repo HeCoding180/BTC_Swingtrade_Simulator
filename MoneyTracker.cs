@@ -8,13 +8,23 @@ namespace BTC_Swingtrade_Simulator
 {
     class MoneyTracker
     {
-        public double USD_Balance { set; get; }
-        public double BTC_Worth { set; get; }
-        public double BTC_Balance { set; get; }
+        public double USD_Balance { private set; get; }
+        public double BTC_Worth { private set; get; }
+        public double BTC_Balance { private set; get; }
+        public double OriginBalance { private set; get; }
 
         public MoneyTracker(double InitialBalance)
         {
             USD_Balance = InitialBalance;
+
+            OriginBalance = InitialBalance;
+        }
+        public MoneyTracker(double InitialUSDBalance, double InitialBTCBalance, double InitialBTCWorth)
+        {
+            USD_Balance = InitialUSDBalance;
+            BTC_Balance = InitialBTCBalance;
+
+            OriginBalance = InitialUSDBalance + InitialBTCWorth * InitialBTCBalance;
         }
 
         public void BTC_Tracker_NewBTCValueAvailable(object sender, BTCEventArgs e)
