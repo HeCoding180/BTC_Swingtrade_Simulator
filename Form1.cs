@@ -32,7 +32,6 @@ namespace BTC_Swingtrade_Simulator
         public Form1()
         {
             InitializeComponent();
-            this.Hide();
 
             using (Font checkFont = new Font("Open Sans Light", 9.75f, FontStyle.Regular, GraphicsUnit.Point))
             {
